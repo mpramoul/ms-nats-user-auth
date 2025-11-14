@@ -1,11 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import * as bcryptjs from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) {}
+
+  async verifyEmailUser(email: string) {
+    return await this.userRepository.findOne({where: {email: email}});
+  }
+
+  async create(createUserDto: CreateUserDto) {
+    const user = await this.userRepository.findOne({where: {email: createUserDto.email}});
+    if(user) { return {message: 'El usuario ya existe'}}
+    createUserDto.password = await bcryptjs.hash(createUserDto.password, 10);
+    const newUser = await this.userRepository.save(createUserDto);
+    return {
+      message: 'El usuario ha sido registrado correctamente',
+      user: newUser
+    };
   }
 
   findAll() {
