@@ -15,9 +15,19 @@ export class AuthService {
 
   async login(createAuthDto: CreateAuthDto) {
     const userAuth = await this.userService.verifyEmailUser(createAuthDto.email);
-    if(!userAuth){throw new RpcException({ statusCode: 403,message:"El usuario NO existe", errors:[] })};
+    if(!userAuth){
+      throw new RpcException({
+      statusCode: 403,
+      message: 'User already exists',
+      errors:['Other messages personalized']})
+      };
     const passValid = await bcryptjs.compare(createAuthDto.password, userAuth.password);
-    if(!passValid){throw new RpcException({ statusCode: 403, message:"La contraseña es incorrecta", errors:[] })};
+    if(!passValid){
+      throw new RpcException({
+      statusCode: 403,
+      message: 'Wrong password',
+      errors:['Other messages personalized']})
+      };
     //Generacion del token
     const payload = {email: userAuth.email, role: userAuth.role, full_name: userAuth.name+' '+userAuth.surname };
     const token = await this.jwtService.signAsync(payload);
@@ -28,5 +38,4 @@ export class AuthService {
   async register(createUserDto: CreateUserDto) {
     return await this.userService.create(createUserDto);
   }
-
 }

@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcryptjs from 'bcryptjs';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class UsersService {
@@ -16,7 +17,11 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto) {
     const user = await this.userRepository.findOne({where: {email: createUserDto.email}});
-    if(user) { return {message: 'El usuario ya existe'}}
+    if(user) { throw new RpcException({
+      statusCode: 403,
+      message: 'User already exists',
+      errors:['Other messages personalized']})
+    }
     createUserDto.password = await bcryptjs.hash(createUserDto.password, 10);
     const newUser = await this.userRepository.save(createUserDto);
     return {

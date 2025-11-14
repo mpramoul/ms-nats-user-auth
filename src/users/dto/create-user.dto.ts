@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
 
 export class CreateUserDto {
   @IsString()
@@ -20,4 +20,9 @@ export class CreateUserDto {
   @IsString()
   @MaxLength(35, {message: 'Rol debe ser mayor ó igual a 35 caracteres'})
   role: string;
+
+  @IsString()
+  _token: string;
+  @IsOptional()
+  user:any;
 }
