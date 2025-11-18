@@ -1,11 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import { firstValueFrom } from 'rxjs';
+import { RpcException } from '@nestjs/microservices';
+import * as bcryptjs from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(
+    @InjectRepository(User) 
+    private readonly userService: Repository<User>
+    
+    ) {}
+
+  async findUserOfEmail(email: string) {
+    return await this.userService.findOne({where:{email: email}});
+  }
+
+  async create(createUserDto: CreateUserDto) {
+    const userdb = await this.findUserOfEmail(createUserDto.email);
+    if(userdb) {
+      throw new RpcException({
+        statusCode: 403,
+        message: 'User already exists',
+        errors: ['User is not characters valid'],
+      })
+    }
+    createUserDto.password = await bcryptjs.hash(createUserDto.password, 10);
+    const newUser = await this.userService.save(createUserDto);
+    return {message: 'User created successfully', user: newUser};
   }
 
   findAll() {

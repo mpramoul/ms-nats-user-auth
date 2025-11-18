@@ -1,11 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { UsersService } from 'src/users/users.service';
+import { CreateUserDto } from 'src/users/dto/create-user.dto';
+import { RpcException } from '@nestjs/microservices';
+import * as bcryptjs from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
+import { CreateAuthDto } from './dto/create-auth.dto';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    private readonly userService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async login(createAuthDto: CreateAuthDto) {
+    const userdb = await this.userService.findUserOfEmail(createAuthDto.email);
+    if(!userdb) {
+      throw new RpcException({
+        statusCode: 403,
+        message: 'User Invalid',
+        errors: []
+      })
+    }
+    const passValid = await bcryptjs.compare(createAuthDto.password, userdb.password);
+    if(!passValid) {
+      throw new RpcException({
+        statusCode: 403,
+        message: 'Password Invalid',
+        errors: [],
+      })
+    }
+    const payload = {email: userdb.email, role: userdb.role, fullname: userdb.name+' '+userdb.surname};
+    const token = await this.jwtService.signAsync(payload);
+    return {message: 'User access', token: token, user: payload};
+  }
+
+  async register(createUserDto: CreateUserDto) {
+    return await this.userService.create(createUserDto);
   }
 
   findAll() {
