@@ -16,10 +16,10 @@ export class UsersService {
       private readonly jwtService: JwtService,
     ) {}
 
-  async login({email, password}: CreateAuthDto) {
-    const userAuth = await this.findOneByEmail(email);
+  async login(createAuthDto: CreateAuthDto) {
+    const userAuth = await this.findOneByEmail(createAuthDto.email);
     if(!userAuth) {throw new UnauthorizedException('Wrong user not found')};
-    const passvalid = await bcryptjs.compare(password, userAuth.password)
+    const passvalid = await bcryptjs.compare(createAuthDto.password, userAuth.password)
     if(!passvalid) {throw new UnauthorizedException('Wrong password invalid')};
     const payload = {email: userAuth.email, role: userAuth.role, fullname: userAuth.name+' '+userAuth.surname }
     const token = await this.jwtService.signAsync(payload);

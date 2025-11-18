@@ -9,7 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
   imports: [TypeOrmModule.forFeature([User]),
             JwtModule.register({
               global: true,
-              secret: process.env.JWT_SECRET ?? "123456",
+              secret: process.env.JWT_SECRET ?? "skidls",
               signOptions: {expiresIn: '1d'},
             })
 ],
