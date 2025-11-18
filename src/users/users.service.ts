@@ -34,19 +34,62 @@ export class UsersService {
     return {message: 'User created successfully', user: newUser};
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    const users = await this.userService.find({select: ['id','name','surname','email','role']});
+    return {users: users};
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(user_id: number) {
+    const oneUser = await this.userService.findOne({where:{id: user_id}, select:['id','name','surname','email','role']});
+    if(!oneUser) {
+      throw new RpcException({
+        statusCode: 403,
+        message: 'User not found',
+        errors: [],
+      })
+    }
+    return {user: oneUser};
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(updateUserDto: UpdateUserDto) {
+    const { user_id, _token, user, ...dataUpdate} = updateUserDto;
+    const userdb = await this.userService.findOne({where:{id: user_id}});
+    if(!userdb) {
+      throw new RpcException({
+        statusCode: 403,
+        message: 'User not found',
+        errors: [],
+      })
+    }
+    if(updateUserDto.password) {
+      dataUpdate.password = await bcryptjs.hash(updateUserDto.password, 10);
+    }
+    const user_updated = await this.userService.update(user_id, dataUpdate);
+    return {
+      id: updateUserDto.user_id,
+      name: updateUserDto.name,
+      surname: updateUserDto. surname,
+      email: updateUserDto.email,
+      role: updateUserDto.role,
+      };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(user_id: number) {
+    const user = await this.userService.findOne({where:{id: user_id}});
+    if(!user) {
+      throw new RpcException({
+        statusCode: 403,
+        message: 'User not found',
+        errors: [],
+      })
+    }
+    const user_deleted = await this.userService.softDelete(user_id);
+    return {message: 'this user has deleted', 
+    user: user.id,
+    name: user.name,
+    surname: user.surname,
+    email: user.email,
+    role: user.role,
+    };
   }
 }

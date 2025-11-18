@@ -15,23 +15,23 @@ export class UsersController {
     return this.usersService.create(createUserDto);
   }
 
-  @Get()
+  @MessagePattern({cmd:'user_list'})
   findAll() {
     return this.usersService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  @MessagePattern({cmd: 'user_list_one'})
+  findOne(@Payload() data: any) {
+    return this.usersService.findOne(+data.user_id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @MessagePattern({cmd:'user_update'})
+  update(@Payload() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(updateUserDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @MessagePattern({cmd: 'user_delete'})
+  remove(@Payload() data: any) {
+    return this.usersService.remove(+data.user_id);
   }
 }
